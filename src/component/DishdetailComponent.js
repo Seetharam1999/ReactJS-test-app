@@ -4,41 +4,13 @@ import React,{Component}from 'react';
 import { Link} from 'react-router-dom';
 import {LocalForm,Control,Errors}from 'react-redux-form';
 import {Card,CardImg,CardBody,CardText,CardTitle,BreadcrumbItem,Breadcrumb,Button,Modal,ModalBody,ModalHeader, Row, Label,Col} from 'reactstrap';
-
-
-    function RenderDish({dish}){
-        return(
-            <Card>
-            <CardImg top src={dish.image} alt={dish.name}/>
-            <CardBody>
-                <CardTitle>{dish.name}</CardTitle>
-                <CardText>{dish.description}</CardText>
-            </CardBody>
-          </Card> 
-        )
-    }
-    function RenderComments({comments}){
-       const com= comments.map((comment)=>{
-       
-        return(
-        
-        <ul className="list-unstyled">
-         <li key={comment.id}>
-          <p>{comment.comment}</p>
-          <p>
-            ---{comment.author},{new Intl.DateTimeFormat('en-US', { year: 'numeric', month: 'short', day: '2-digit'}).format(new Date(Date.parse(comment.date)))}
-          </p>
-        </li>
- </ul>
-  )
-        }) 
-        return(<div>{com}</div>) 
-    }
-    const required=(val)=>val && val.length;
-    const maxLength=(len)=>(val)=>!(val)||(val.length<=len);
-    const minLength=(len)=>(val)=>!(val)||(val.length>=len);
-  class DishDetail extends Component{
-     
+import {Loading}from './LoadingComponent';
+import {baseUrl}from '../shared/baseurl';
+const required=(val)=>val && val.length;
+const maxLength=(len)=>(val)=>!(val)||(val.length<=len);
+const minLength=(len)=>(val)=>!(val)||(val.length>=len);
+class CommentForm extends Component{
+ 
     constructor(props){
         super(props);
         this.state={
@@ -58,11 +30,14 @@ import {Card,CardImg,CardBody,CardText,CardTitle,BreadcrumbItem,Breadcrumb,Butto
         this.toggleModal();
         console.log("Current State: " +JSON.stringify(value));
         alert("Current State: "+JSON.stringify(value));
+        this.props.addComment(this.props.dishId, value.rating, value.author, value.comment);
     }
     render(){
        
-       const CommentForm=()=>{
-            return(
+        return(
+            <div>
+               <Button outline className="fa fa-pencil bg-lg"  onClick={this.toggleModal}>Submit Comment</Button>
+            
                 <Modal isOpen={this.state.isModalOpen} toggle={this.toggleModal} >
                     <ModalHeader toggle={this.toggleModal}>Comment Form</ModalHeader>
                  <ModalBody>
@@ -83,12 +58,12 @@ import {Card,CardImg,CardBody,CardText,CardTitle,BreadcrumbItem,Breadcrumb,Butto
                                 </Col>
                             </Row>
                             <Row className="form-group">
-                                <Label htmlFor="yourname" name="yourname" md={4}>Your Name</Label>
+                                <Label htmlFor="author" name="author" md={4}>Your Name</Label>
                                 <Col md={12}>
-                                    <Control.text model=".yourname"
+                                    <Control.text model=".author"
                                     className="form-control"
-                                    name="yourname"
-                                    id="yourname"
+                                    name="author"
+                                    id="author"
                                     placeholder="Your Name"
                                     validators={{required,
                                     minLength:minLength(3),
@@ -97,7 +72,7 @@ import {Card,CardImg,CardBody,CardText,CardTitle,BreadcrumbItem,Breadcrumb,Butto
                                     <Errors 
                                     className="text-danger"
                                     show="touched"
-                                    model=".yourname"
+                                    model=".author"
                                     messages={{
                                         required:'Required',
                                         minLength:"Must be greater than 3",
@@ -127,35 +102,92 @@ import {Card,CardImg,CardBody,CardText,CardTitle,BreadcrumbItem,Breadcrumb,Butto
                         </LocalForm>
                  </ModalBody>
                 </Modal>
+                </div>
             )
         }
-    
+    }
+
+    function RenderDish({dish}){
+        return(
+            <Card>
+            <CardImg top src={baseUrl+dish.image} alt={dish.name}/>
+            <CardBody>
+                <CardTitle>{dish.name}</CardTitle>
+                <CardText>{dish.description}</CardText>
+            </CardBody>
+          </Card> 
+        )
+    }
+    function RenderComments({comments,addComment,dishId}){
+       const com= comments.map((comment)=>{
+       
+        return(
+        
+        <ul className="list-unstyled">
+         <li key={comment.id}>
+          <p>{comment.comment}</p>
+          <p>
+            ---{comment.author},{new Intl.DateTimeFormat('en-US', { year: 'numeric', month: 'short', day: '2-digit'}).format(new Date(Date.parse(comment.date)))}
+          </p>
+        </li>
+ </ul>
+  )
+        }) 
+        return(<div>{com}
+        <CommentForm addComment={addComment}
+        dishId={dishId}
+        /></div>) 
+    }
+   
+  const DishDetail=(props)=>{
+           
+    if (props.isLoading) {
+        return(
+            <div className="container">
+                <div className="row">            
+                    <Loading />
+                </div>
+            </div>
+        );
+    }
+    else if (props.errMess) {
+        return(
+            <div className="container">
+                <div className="row">            
+                    <h4>{props.errMess}</h4>
+                </div>
+            </div>
+        );
+    }
+    else if (props.dish != null) {
     return (
         <div className="container">
         <div className="row">
             <Breadcrumb>
 
                 <BreadcrumbItem><Link to="/menu">Menu</Link></BreadcrumbItem>
-                <BreadcrumbItem active>{this.props.dish.name}</BreadcrumbItem>
+                <BreadcrumbItem active>{props.dish.name}</BreadcrumbItem>
             </Breadcrumb>
             <div className="col-12">
-                <h3>{this.props.dish.name}</h3>
+                <h3>{props.dish.name}</h3>
                 <hr />
             </div>                
         </div>
         <div className="row">
             <div className="col-12 col-md-5 m-1">
-                <RenderDish dish={this.props.dish} />
+                <RenderDish dish={props.dish} />
             </div>
             <div className="col-12 col-md-5 m-1">
-                <RenderComments comments={this.props.comments} />
-                <Button outline className="fa fa-pencil bg-lg"  onClick={this.toggleModal}>Submit Comment</Button>
-                <CommentForm></CommentForm>
+                <RenderComments comments={props.comments} 
+                addComment={props.addComment}
+                dishId={props.dish.id}
+                />
+               
+             
            </div>
         </div>
         </div>
     );
     }   
-      
 }
 export default DishDetail;
