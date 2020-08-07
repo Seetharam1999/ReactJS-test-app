@@ -10,23 +10,29 @@ import Contact from './ContactComponent';
 import About from './AboutComponent';
 import {connect}from 'react-redux';
 import {actions}from 'react-redux-form';
-import{addComment,fetchDishes,fetchPromos,fetchComments}from '../redux/ActionCreators'
+import{CSSTransition,TransitionGroup}from 'react-transition-group';
+import{postComment,fetchDishes,fetchPromos,fetchComments,fetchLeaders,addFeedback}from '../redux/ActionCreators'
 const mapStateToProps = state => {
   return {
     dishes: state.dishes,
     comments: state.comments,
     promotions: state.promotions,
-    leaders: state.leaders
+    leaders: state.leaders,
+    
   }
 }
 
 const mapDispatchToProps = dispatch => ({
   fetchDishes:()=>{dispatch(fetchDishes())},
   resetFeedbackForm:()=>{dispatch(actions.reset('feedback'))},
-  addComment: (dishId, rating, author, comment) => dispatch(addComment(dishId, rating, author, comment)),
+  postComment: (dishId, rating, author, comment) => dispatch(postComment(dishId, rating, author, comment)),
+  // addComment: (dishId, rating, author, comment) => dispatch(addComment(dishId, rating, author, comment)),
   
   fetchComments: () => dispatch(fetchComments()),
-  fetchPromos: () => dispatch(fetchPromos())
+  fetchPromos: () => dispatch(fetchPromos()),
+  fetchLeaders:()=>dispatch(fetchLeaders()),
+  addFeedback:(value)=>dispatch(addFeedback(value)),
+  //addFeedback:(firstname,lastname,telnum,email,contactType,agree,message)=>dispatch(addFeedback(firstname,lastname,telnum,email,contactType,agree,message))
 });
 
 
@@ -40,6 +46,7 @@ class Main extends Component {
     this.props.fetchDishes();
     this.props.fetchComments();
     this.props.fetchPromos();
+    this.props.fetchLeaders();
   }
 
   onDishSelect(dishId) {
@@ -58,7 +65,10 @@ return(
   promotion={this.props.promotions.promotions.filter((promo) => promo.featured)[0]}
   promoLoading={this.props.promotions.isLoading}
   promoErrMess={this.props.promotions.errMess}
-  leader={this.props.leaders.filter((leader) => leader.featured)[0]}
+  leader={this.props.leaders.leaders.filter((leader) => leader.featured)[0]}
+  leadersLoading={this.props.leaders.isLoading}
+  leadersErrMess={this.props.leaders.errMess}
+
 />
 )
       //   return(<Home 
@@ -74,7 +84,7 @@ return(
         errMess={this.props.dishes.errMess}
         comments={this.props.comments.comments.filter((comment) => comment.dishId === parseInt(match.params.dishId,10))}
         commentsErrMess={this.props.comments.errMess}
-        addComment={this.props.addComment}
+        postComment={this.props.postComment}
       />
     );
       //  return(
@@ -88,18 +98,26 @@ return(
      
       <div>
        <Header/>
-       <Switch>
+       <TransitionGroup>
+         <CSSTransition key={this.props.location.key} classNames="page" timeout={300}>
+       <Switch location={this.props.location}>
          <Route path='/home' component={HomePage}/>
          <Route exact path='/menu' component={()=><Menu dishes={this.props.dishes} 
           isLoading={this.props.dishes.isLoading}
           errMess={this.props.dishes.errMess}
          onClick={(dishId) => this.onDishSelect(dishId)}/>}/>
-          <Route exact path='/contactus' component={()=><Contact resetFeedbackForm={this.props.resetFeedbackForm}/>}/>
+          <Route exact path='/contactus' component={()=><Contact resetFeedbackForm={this.props.resetFeedbackForm}
+          addFeedback={this.props.addFeedback}
+          />}/>
           <Route path="/menu/:dishId" component={DishWithId} />
-         <Route exact path='/aboutus' component={()=><About leaders={this.props.leaders}/>}/>
+         <Route exact path='/aboutus' component={()=><About leaders={this.props.leaders.leaders}
+          
+          leadersLoading={this.props.leaders.isLoading}
+          leadersErrMess={this.props.leaders.errMess}/>}/>
            <Redirect to='/home'/> 
        </Switch>
-      
+       </CSSTransition>
+       </TransitionGroup>
         {/* <Menu dishes={this.props.dishes} onClick={(dishId) => this.onDishSelect(dishId)} />
         <DishDetail dish={this.state.dishes.filter((dish) => dish.id === this.state.selectedDish)[0]} /> */}
         <Footer/>

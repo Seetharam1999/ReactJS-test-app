@@ -2,6 +2,7 @@ import React from 'react';
 import { Card, CardImg, CardText, CardBody,
     CardTitle, CardSubtitle} from 'reactstrap';
 import {baseUrl}from '../shared/baseurl';
+import{FadeTransform}from 'react-animation-components';
     import { Loading } from './LoadingComponent';
     function RenderCard({item, isLoading, errMess}) {
     
@@ -16,8 +17,13 @@ import {baseUrl}from '../shared/baseurl';
             );
         }
         else {
-            if(item){
+            if(item!==null){
             return(
+                <FadeTransform
+                in
+                transfromProps={{
+                    exitTransfrom:'scale(0.5) translateY(-50%)'
+                }}>
                 <Card>
                     <CardImg src={baseUrl+item.image} alt={item.name} />
                     <CardBody>
@@ -26,6 +32,7 @@ import {baseUrl}from '../shared/baseurl';
                     <CardText>{item.description}</CardText>
                     </CardBody>
                 </Card>
+                </FadeTransform>
             );
             }
             else{
@@ -48,7 +55,7 @@ function Home(props) {
                 <RenderCard item={props.promotion} isLoading={props.promoLoading} errMess={props.promoErrMess} />
                 </div>
                 <div className="col-12 col-md m-1">
-                    <RenderCard item={props.leader} />
+                    <RenderCard item={props.leader} isLoading={props.leadersLoading} errMess={props.leadersErrMess}/>
                 </div>
             </div>
             
